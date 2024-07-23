@@ -5,6 +5,15 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@types/matter-js':
+    specifier: ^0.19.7
+    version: registry.npmmirror.com/@types/matter-js@0.19.7
+  howler:
+    specifier: ^2.2.4
+    version: registry.npmmirror.com/howler@2.2.4
+  matter-js:
+    specifier: ^0.20.0
+    version: registry.npmmirror.com/matter-js@0.20.0
   pixi.js:
     specifier: ^8.2.5
     version: registry.npmmirror.com/pixi.js@8.2.5
@@ -27,6 +36,12 @@ packages:
     resolution: {integrity: sha512-qp3m9PPz4gULB9MhjGID7wpo3gJ4bTGXm7ltNDsmOvsPduTeHp8wSW9YckBj3mljeOh4F0m2z/0JKAALRKbmLQ==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/earcut/-/earcut-2.1.4.tgz}
     name: '@types/earcut'
     version: 2.1.4
+    dev: false
+
+  registry.npmmirror.com/@types/matter-js@0.19.7:
+    resolution: {integrity: sha512-dlh50YEh1lQS4fiCDGBnK75ocHQIq/1E371Qk6hASJImICIivdZQC2GkOqnfBm0Hac2xLk5+yrqRFDAEfj/yLA==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/matter-js/-/matter-js-0.19.7.tgz}
+    name: '@types/matter-js'
+    version: 0.19.7
     dev: false
 
   registry.npmmirror.com/@webgpu/types@0.1.44:
@@ -54,10 +69,22 @@ packages:
     version: 5.0.1
     dev: false
 
+  registry.npmmirror.com/howler@2.2.4:
+    resolution: {integrity: sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/howler/-/howler-2.2.4.tgz}
+    name: howler
+    version: 2.2.4
+    dev: false
+
   registry.npmmirror.com/ismobilejs@1.1.1:
     resolution: {integrity: sha512-VaFW53yt8QO61k2WJui0dHf4SlL8lxBofUuUmwBo0ljPk0Drz2TiuDW4jo3wDcv41qy/SxrJ+VAzJ/qYqsmzRw==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/ismobilejs/-/ismobilejs-1.1.1.tgz}
     name: ismobilejs
     version: 1.1.1
+    dev: false
+
+  registry.npmmirror.com/matter-js@0.20.0:
+    resolution: {integrity: sha512-iC9fYR7zVT3HppNnsFsp9XOoQdQN2tUyfaKg4CHLH8bN+j6GT4Gw7IH2rP0tflAebrHFw730RR3DkVSZRX8hwA==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/matter-js/-/matter-js-0.20.0.tgz}
+    name: matter-js
+    version: 0.20.0
     dev: false
 
   registry.npmmirror.com/parse-svg-path@0.1.2:
