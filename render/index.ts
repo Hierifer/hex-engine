@@ -1,38 +1,40 @@
 import { Application, Assets, Sprite } from 'pixi.js';
-import Physice from '../physics/index'
-
-// 默认设置变量
-const DEFAULT_TARGET_LOC = 'body'
+import PhysiceManager from '../physics/index'
+import GameObject from '../scene/GameObject'
+import { DEFAULT_TARGET_LOC } from '../utils/constant'
+import PhysicsManager from '../physics/index';
 
 // 对象类型定义
-type GGCONFIG = {
+type GG_CONFIG = {
     target?: string
+    options?: GG_CONFIG_SIZE
 }
-type IGAME_SIZE = {
+type GG_CONFIG_SIZE = {
     width: number,
     height: number,
 }
-
-
 class GameGenerator{
     status = 'init'
     targetLoc = DEFAULT_TARGET_LOC
     app:Application
-    size:IGAME_SIZE = {width: 1000, height: 1000}
+    size:GG_CONFIG_SIZE = {width: 1000, height: 1000}
+    goManager: Array<GameObject> = new Array<GameObject>()
+    phyManager: PhysicsManager
 
-    constructor(config:GGCONFIG){
+    constructor(config: GG_CONFIG){
         this.targetLoc = config.target || DEFAULT_TARGET_LOC
         this.app = new Application();
         this._init().then(() => {
             this.status = 'mounted'
             this.update()
         })
+        this.phyManager = new PhysiceManager(this.targetLoc)
     }
     async _init(){
         // Create a PixiJS application.
         await this.load()
         await this.mount()
-        Physice.init(this.targetLoc, this.app.screen.width, this.app.screen.height)
+        this.phyManager.init(this.app.screen.width, this.app.screen.height).loadScene(this.goManager)
     }
     _destory(){
 
@@ -79,17 +81,31 @@ class GameGenerator{
         // Move the sprite to the center of the screen.
         bunny.x = this.app.screen.width / 2;
         bunny.y = this.app.screen.height / 2;
+        const bunnyGameObject = new GameObject(0, {posX: bunny.x, posY: bunny.y},{}).addSprite(bunny)
+        this.goManager.push(bunnyGameObject)
+
     }
     async update(){
         // Add an animation loop callback to the application's ticker.
         this.app.ticker.add((time) =>
         {
+            // physics update
+            const updatedPhyMap = this.phyManager.getUpdatedMap()
+
             // GameObject 的 update 应该都执行在这里
-            const bunny = this.app.stage.getChildAt(0)
-            
-            if(bunny){
-                bunny.rotation += 0.1 * time.deltaTime;
+            for(let i = 0; i < this.goManager.length; i++){
+                const curGO = this.goManager[i]
+                const ro = curGO.components[0]
+                ro.position = updatedPhyMap.get(curGO.id)?.pos || { x: 0, y:0 }
+                ro.rotation = updatedPhyMap.get(curGO.id)?.angle || 0
             }
+            
+
+            // const bunny = this.app.stage.getChildAt(0)
+            
+            // if(bunny){
+            //     bunny.rotation += 0.1 * time.deltaTime;
+            // }
 
             if(document.getElementById('debugObject')){
                 document.getElementById('debugObject')!.innerHTML = 

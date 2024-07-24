@@ -8,6 +8,9 @@ dependencies:
   '@types/matter-js':
     specifier: ^0.19.7
     version: registry.npmmirror.com/@types/matter-js@0.19.7
+  es-toolkit:
+    specifier: ^1.13.1
+    version: registry.npmmirror.com/es-toolkit@1.13.1
   howler:
     specifier: ^2.2.4
     version: registry.npmmirror.com/howler@2.2.4
@@ -61,6 +64,12 @@ packages:
     resolution: {integrity: sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/earcut/-/earcut-2.2.4.tgz}
     name: earcut
     version: 2.2.4
+    dev: false
+
+  registry.npmmirror.com/es-toolkit@1.13.1:
+    resolution: {integrity: sha512-tGsgoI8DfU0yrZI7w97aYVMZJU5sjpXC+HK8aYf3pmLQRNHMleiJN5ud21dA/IHKkTDFY5jcDMQcLs0A21LtAg==, registry: http://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/es-toolkit/-/es-toolkit-1.13.1.tgz}
+    name: es-toolkit
+    version: 1.13.1
     dev: false
 
   registry.npmmirror.com/eventemitter3@5.0.1:

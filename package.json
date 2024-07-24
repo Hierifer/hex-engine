@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/matter-js": "^0.19.7",
+    "es-toolkit": "^1.13.1",
     "howler": "^2.2.4",
     "matter-js": "^0.20.0",
     "pixi.js": "^8.2.5"
