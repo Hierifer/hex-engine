@@ -63,27 +63,31 @@ class GameGenerator{
         // Intialize the application.
         await this.app.init({ background: '#1099bb', resizeTo: window });
 
-        // GameObject 的初始化都在这里
-        // Load the bunny texture.
-        const texture = await Assets.load('https://pixijs.com/assets/bunny.png');
+        const MAX = 10
+        const MAXY = 3
+        for(let i = 0; i < MAX; i++){
+            for(let c = 0; c < MAXY; c++){
+            // GameObject 的初始化都在这里
+            // Load the bunny texture.
+            const texture = await Assets.load('https://pixijs.com/assets/bunny.png');
 
-        // Create a new Sprite from an image path.
-        const bunny = new Sprite(texture);
+            // Create a new Sprite from an image path.
+            const bunny = new Sprite(texture);
 
-        // Add to stage.
-        this.app.stage.addChild(bunny);
-        console.log(bunny.label)
+            // Add to stage.
+            this.app.stage.addChild(bunny);
+
+            // Center the sprite's anchor point.
+            bunny.anchor.set(0.5);
+
+            // Move the sprite to the center of the screen.
+            bunny.x = this.app.screen.width / 2 - 5 * i - MAX * .5;
+            bunny.y = this.app.screen.height / 3 * 2 - 10 * c - MAXY * .5;
         
-
-        // Center the sprite's anchor point.
-        bunny.anchor.set(0.5);
-
-        // Move the sprite to the center of the screen.
-        bunny.x = this.app.screen.width / 2;
-        bunny.y = this.app.screen.height / 2;
-        const bunnyGameObject = new GameObject(0, {posX: bunny.x, posY: bunny.y},{}).addSprite(bunny)
-        this.goManager.push(bunnyGameObject)
-
+            const bunnyGameObject = new GameObject(i, {posX: bunny.x, posY: bunny.y},{width: bunny.width, height: bunny.height}).addSprite(bunny)
+            this.goManager.push(bunnyGameObject)
+            }
+        }
     }
     async update(){
         // Add an animation loop callback to the application's ticker.
@@ -99,6 +103,7 @@ class GameGenerator{
                 ro.position = updatedPhyMap.get(curGO.id)?.pos || { x: 0, y:0 }
                 ro.rotation = updatedPhyMap.get(curGO.id)?.angle || 0
             }
+            updatedPhyMap.clear()
             
 
             // const bunny = this.app.stage.getChildAt(0)

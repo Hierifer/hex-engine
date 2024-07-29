@@ -18,12 +18,14 @@ class PhysicsManager{
     private target = DEFAULT_TARGET_LOC
     options = {width: 1000, height: 1000}
     pBodyMap = new Map<number, Matter.Body>()
+    
+    debugMode = false
 
 
-    constructor(target: string, options?: IPM_OPTIONS){
+    constructor(target: string, options?: IPM_OPTIONS, debugMode = true){
         this.target = target
         this.options = this.options || options
-
+        this.debugMode = debugMode
     }
     init(width:number, height: number){
         // module aliases
@@ -49,19 +51,19 @@ class PhysicsManager{
         const WALLTHICK = 40
     
         // create two boxes and a ground
-        const boxA = this.Bodies.rectangle(400, 200, 80, 80);
-        const boxB = this.Bodies.rectangle(450, 50, 80, 80);
         const wallLeft = this.Bodies.rectangle(-1 * WALLTHICK, height/2, WALLTHICK, height, { isStatic: true });
         const wallRight = this.Bodies.rectangle(width + WALLTHICK, height/2, WALLTHICK, height, { isStatic: true });
         const ground = this.Bodies.rectangle(width/2, height - 2 * WALLTHICK, width, WALLTHICK, { isStatic: true });
-        Matter.Body.setAngle(ground, .04)
+        const ground2 = this.Bodies.rectangle(width/2, height - 2 * WALLTHICK, width, WALLTHICK, { isStatic: true });
+        Matter.Body.setAngle(ground, .08)
+        Matter.Body.setAngle(ground2, -.08)
         //ground.angle = 0.01
     
         // add all of the bodies to the world
-        this.Composite.add(this.engine.world, [boxA, boxB, wallLeft, wallRight, ground]);
+        this.Composite.add(this.engine.world, [wallLeft, wallRight, ground, ground2]);
     
         // run the renderer
-        //Render.run(render);
+        if(this.debugMode) Render.run(render);
     
         // create runner
         const runner = Runner.create()
@@ -89,9 +91,10 @@ class PhysicsManager{
         const out = new Map<number, {pos: Matter.Vector, angle: number}>()
         const keys = [...this.pBodyMap.keys()]
         for(let i = 0; i < keys.length; i++){
-            const k = keys[i]
-            const v = { pos: this.pBodyMap.get(k).position, angle: this.pBodyMap.get(k).angle }
-            out.set(k,v)
+            const pBody = this.pBodyMap.get(keys[i])
+            if(pBody !== void 0){
+                out.set(keys[i],{ pos: pBody.position, angle: pBody.angle })
+            }
         }
         return out
     }

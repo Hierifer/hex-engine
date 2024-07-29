@@ -1,9 +1,4 @@
-// export class Component(){
-//     constructor(){
-
-//     }
-// }
-import { Application, Assets, Sprite } from 'pixi.js';
+import { Sprite } from 'pixi.js';
 
 export class GameObject {
     id: number = 0
