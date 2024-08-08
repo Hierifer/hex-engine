@@ -1,4 +1,4 @@
-import { Sprite } from "pixi.js";
+import { Sprite, Graphics } from "pixi.js";
 import GameObject from "./GameObject";
 
 /**
@@ -13,7 +13,6 @@ export class Component {
     go.addComponents([this]);
   }
 }
-
 
 /**
  * 图片组件类 - 继承自 Component
@@ -35,24 +34,23 @@ export class SpriteComponent extends Component {
   }
 }
 
-
 /**
  * 基础片源类 - 继承自 Component
  */
-export class BasicGraphicComponent extends Component {
-  sprite: Sprite;
+export class GraphicComponent extends Component {
+  graphic: Graphics;
 
-  constructor(sprite: Sprite) {
-    super("sprite");
-    this.sprite = sprite;
+  constructor(graphic: Graphics) {
+    super("graphic");
+    this.graphic = graphic;
   }
 
-  getSprite() {
-    return this.sprite;
+  getGraphic() {
+    return this.graphic;
   }
 
-  setSprite(key: string, value: any) {
-    this.sprite[key] = value;
+  setGraphic(key: string, value: any) {
+    this.graphic[key] = value;
   }
 }
 

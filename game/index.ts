@@ -1,7 +1,11 @@
 import { Application, Assets, Sprite, Graphics, Polygon } from "pixi.js";
 import PhysiceManager from "../physics/index";
 import { GameObject } from "../scene/GameObject";
-import { SpriteComponent, Physics2DComponent } from "../scene/Component";
+import {
+  SpriteComponent,
+  GraphicComponent,
+  Physics2DComponent,
+} from "../scene/Component";
 import Matter from "matter-js";
 
 import { DEFAULT_TARGET_LOC } from "../utils/constant";
@@ -32,16 +36,13 @@ class GameGenerator {
   phyManager: PhysicsManager;
 
   debugOptions: GG_CONFIG_DEBUG_OPTIONS = {
-    showPhysics: true,
+    showPhysics: false,
   };
 
   constructor(config: GG_CONFIG) {
     this.targetLoc = config.target || DEFAULT_TARGET_LOC;
     this.app = new Application();
-    this._init().then(() => {
-      this.status = "mounted";
-      this.update();
-    });
+    this._init();
 
     this.phyManager = new PhysiceManager(
       this.targetLoc,
@@ -52,13 +53,19 @@ class GameGenerator {
   async _init() {
     // Create a PixiJS application.
     await this.load();
+
     await this.mount();
 
+    this.status = "mounted";
+
+    this.update();
+
     // 初始化物理系统
-    this.phyManager
-      .init(this.app.screen.width, this.app.screen.height)
-      .loadScene(this.goManager);
+    this.phyManager.init(this.app.screen.width, this.app.screen.height);
   }
+  /**
+   * 解
+   */
   _destory() {}
   getDebugGameObjects() {
     return this.app.stage.getChildrenByLabel("Sprite");
@@ -80,10 +87,11 @@ class GameGenerator {
   resize() {}
   add2GameManager(go: GameObject) {
     if (
-      this.goManager.find((go) => {
-        return go.getId() === go.getId();
-      }) === undefined
+      this.goManager.find((tmp) => {
+        return tmp.getId() === go.getId();
+      }) !== undefined
     ) {
+      // 去重
       return;
     }
     // Add to stage.
@@ -91,9 +99,12 @@ class GameGenerator {
       const sprite = go.findComponent("sprite") as SpriteComponent;
       this.app.stage.addChild(sprite.getSprite());
     }
+    if (go.findComponent("graphic") !== undefined) {
+      const graphic = go.findComponent("graphic") as GraphicComponent;
+      this.app.stage.addChild(graphic.getGraphic());
+    }
     if (go.findComponent("physics2d") !== undefined) {
-      const physics2d = go.findComponent("physics2d") as Physics2DComponent;
-      this.phyManager.addObjs2World([physics2d.getBody()]);
+      this.phyManager.addObjs2World([go]);
     }
     this.goManager.push(go);
   }
@@ -131,68 +142,53 @@ class GameGenerator {
     const width = this.app.screen.width;
     const height = this.app.screen.height;
 
-    // let wallG = new Graphics()
-    // .rect(0, 0, 200, 100)
-    // .fill(0xff0000);
+    const wallG = new Graphics().rect(0, 0, 200, 100).fill(0xff0000);
 
-    // create two boxes and a ground
-    const wallLeft = Matter.Bodies.rectangle(
-      -1 * WALLTHICK,
-      height / 2,
-      WALLTHICK,
-      height,
-      { isStatic: true }
-    );
-    const wallLGameObject = new GameObject(
-      id,
-      { posX: WALLTHICK / 2, posY: height / 2 },
-      { width: WALLTHICK, height }
-    ).addComponents([new Physics2DComponent(wallLeft)]);
-    this.goManager.push(wallLGameObject);
+    //create two boxes and a ground
 
-    const wallRight = Matter.Bodies.rectangle(
-      width + WALLTHICK,
-      height / 2,
-      WALLTHICK,
-      height,
-      { isStatic: true }
-    );
-    const wallRGameObject = new GameObject(
-      id,
-      { posX: width + WALLTHICK / 2, posY: height / 2 },
-      { width: WALLTHICK, height }
-    ).addComponents([new Physics2DComponent(wallRight)]);
-    this.goManager.push(wallRGameObject);
+    // const wallRight = Matter.Bodies.rectangle(
+    //   width + WALLTHICK,
+    //   height / 2,
+    //   WALLTHICK,
+    //   height,
+    //   { isStatic: true }
+    // );
+    // const wallRGameObject = new GameObject(
+    //   "wall",
+    //   { posX: width + WALLTHICK / 2, posY: height / 2 },
+    //   { width: WALLTHICK, height }
+    // ).addComponents([new Physics2DComponent(wallRight)]);
+    // this.goManager.push(wallRGameObject);
 
-    const ground = Matter.Bodies.rectangle(
-      width / 2,
-      height - 2 * WALLTHICK,
-      width,
-      WALLTHICK,
-      { isStatic: true }
-    );
-    const ground2 = Matter.Bodies.rectangle(
-      width / 2,
-      height - 2 * WALLTHICK,
-      width,
-      WALLTHICK,
-      { isStatic: true }
-    );
-    Matter.Body.setAngle(ground, 0.08);
-    Matter.Body.setAngle(ground2, -0.08);
-    const groundLGameObject = new GameObject(
-      id,
-      { posX: width / 4, posY: height },
-      { width: width / 2, height: WALLTHICK }
-    ).addComponents([new Physics2DComponent(ground)]);
-    this.goManager.push(groundLGameObject);
+    // const ground = Matter.Bodies.rectangle(
+    //   width / 2,
+    //   height - 2 * WALLTHICK,
+    //   width,
+    //   WALLTHICK,
+    //   { isStatic: true }
+    // );
+    // const ground2 = Matter.Bodies.rectangle(
+    //   width / 2,
+    //   height - 2 * WALLTHICK,
+    //   width,
+    //   WALLTHICK,
+    //   { isStatic: true }
+    // );
+    // Matter.Body.setAngle(ground, 0.08);
+    // Matter.Body.setAngle(ground2, -0.08);
+    // const groundLGameObject = new GameObject(
+    //   "wall",
+    //   { posX: width / 4, posY: height },
+    //   { width: width / 2, height: WALLTHICK }
+    // ).addComponents([new Physics2DComponent(ground)]);
+    // this.goManager.push(groundLGameObject);
 
-    const groundRGameObject = new GameObject(
-      id,
-      { posX: (width * 3) / 4, posY: height },
-      { width: width / 2, height: WALLTHICK }
-    ).addComponents([new Physics2DComponent(ground2)]);
-    this.goManager.push(groundRGameObject);
+    // const groundRGameObject = new GameObject(
+    //   "wall",
+    //   { posX: (width * 3) / 4, posY: height },
+    //   { width: width / 2, height: WALLTHICK }
+    // ).addComponents([new Physics2DComponent(ground2)]);
+    // this.goManager.push(groundRGameObject);
   }
 
   async update() {
