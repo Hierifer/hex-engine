@@ -1,5 +1,5 @@
 import { Component, Physics2DComponent } from "./Component";
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 
 export class GameObject {
   id = "";
@@ -17,7 +17,7 @@ export class GameObject {
     geo: Partial<GO_GEOMETRY>,
     attrs: Partial<{ width: number; height: number }>
   ) {
-    this.id = uuidv4();
+    this.id = nanoid();
     this.geo = { ...this.geo, ...geo };
     this.attrs = { ...this.attrs, ...attrs };
   }
