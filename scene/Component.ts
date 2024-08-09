@@ -30,6 +30,7 @@ export class SpriteComponent extends Component {
   }
 
   setSprite(key: string, value: any) {
+    // @ts-expect-error: use it later
     this.sprite[key] = value;
   }
 }
@@ -50,6 +51,7 @@ export class GraphicComponent extends Component {
   }
 
   setGraphic(key: string, value: any) {
+    // @ts-expect-error: use it later
     this.graphic[key] = value;
   }
 }

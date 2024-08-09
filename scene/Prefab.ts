@@ -22,7 +22,8 @@ export class GeometryPrefab extends Prefab {
   width = 0;
   height = 0;
   background = 0x000000;
-  onClick = (t) => {};
+
+  onClick: (t: FederatedPointerEvent) => void;
   constructor(
     label: string,
     {
@@ -34,12 +35,13 @@ export class GeometryPrefab extends Prefab {
       width: number;
       height: number;
       background?: number | string;
-      onClick?: (t: any) => void;
+      onClick?: (t: FederatedPointerEvent) => void;
     }
   ) {
     super(label);
     this.width = width;
     this.height = height;
+    // @ts-expect-error: use it later
     this.background = background || 0x000000;
     this.onClick = onClick ?? ((t: any) => {});
   }

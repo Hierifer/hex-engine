@@ -121,6 +121,7 @@ class GameGenerator {
     }
     const physics2d = go.findComponent("physics2d");
     if (physics2d instanceof Physics2DComponent) {
+      // @ts-expect-error: check here
       this.phyManager.removeObjsFromWorld([physics2d.getBody()]);
     }
   }
@@ -143,6 +144,7 @@ class GameGenerator {
     // 游戏逻辑之后移除
 
     // Add an animation loop callback to the application's ticker.
+
     this.app.ticker.add((time) => {
       onUpdate();
       // physics update
