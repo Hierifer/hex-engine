@@ -4,7 +4,7 @@ import {
   GraphicComponent,
   Physics2DComponent,
 } from "./Component";
-import { Sprite, Assets, Graphics } from "pixi.js";
+import { Sprite, Assets, Graphics, FederatedPointerEvent } from "pixi.js";
 type Status = "pending" | "ready";
 import Matter from "matter-js";
 export abstract class Prefab {
@@ -21,13 +21,27 @@ export class GeometryPrefab extends Prefab {
   components = [];
   width = 0;
   height = 0;
+  background = 0x000000;
+  onClick = (t) => {};
   constructor(
     label: string,
-    { width, height }: { width: number; height: number }
+    {
+      width,
+      height,
+      background,
+      onClick,
+    }: {
+      width: number;
+      height: number;
+      background?: number | string;
+      onClick?: (t: any) => void;
+    }
   ) {
     super(label);
     this.width = width;
     this.height = height;
+    this.background = background || 0x000000;
+    this.onClick = onClick ?? ((t: any) => {});
   }
 
   /**
@@ -39,7 +53,13 @@ export class GeometryPrefab extends Prefab {
     return Promise.resolve().then(() => {
       const rect = new Graphics()
         .rect(x - this.width / 2, y - this.height / 2, this.width, this.height)
-        .fill(0x000000);
+        .fill(this.background || 0x000000)
+        .stroke({ width: 1, color: 0xffd900 });
+      //   rect.eventMode = "static";
+      //   rect.cursor = "pointer";
+      rect.on("pointerdown", this.onClick);
+
+      rect.eventMode = "static";
       const wall = Matter.Bodies.rectangle(x, y, this.width, this.height, {
         isStatic: true,
       });

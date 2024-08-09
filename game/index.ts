@@ -131,72 +131,20 @@ class GameGenerator {
       antialias: true,
       resizeTo: window,
     });
-
+    this.size = {
+      width: this.app.screen.width,
+      height: this.app.screen.height,
+    };
     // 之后动态加载
     onStart(this);
-
-    // 添加墙体
-    const id = 100;
-    const WALLTHICK = 40;
-
-    const width = this.app.screen.width;
-    const height = this.app.screen.height;
-
-    const wallG = new Graphics().rect(0, 0, 200, 100).fill(0xff0000);
-
-    //create two boxes and a ground
-
-    // const wallRight = Matter.Bodies.rectangle(
-    //   width + WALLTHICK,
-    //   height / 2,
-    //   WALLTHICK,
-    //   height,
-    //   { isStatic: true }
-    // );
-    // const wallRGameObject = new GameObject(
-    //   "wall",
-    //   { posX: width + WALLTHICK / 2, posY: height / 2 },
-    //   { width: WALLTHICK, height }
-    // ).addComponents([new Physics2DComponent(wallRight)]);
-    // this.goManager.push(wallRGameObject);
-
-    // const ground = Matter.Bodies.rectangle(
-    //   width / 2,
-    //   height - 2 * WALLTHICK,
-    //   width,
-    //   WALLTHICK,
-    //   { isStatic: true }
-    // );
-    // const ground2 = Matter.Bodies.rectangle(
-    //   width / 2,
-    //   height - 2 * WALLTHICK,
-    //   width,
-    //   WALLTHICK,
-    //   { isStatic: true }
-    // );
-    // Matter.Body.setAngle(ground, 0.08);
-    // Matter.Body.setAngle(ground2, -0.08);
-    // const groundLGameObject = new GameObject(
-    //   "wall",
-    //   { posX: width / 4, posY: height },
-    //   { width: width / 2, height: WALLTHICK }
-    // ).addComponents([new Physics2DComponent(ground)]);
-    // this.goManager.push(groundLGameObject);
-
-    // const groundRGameObject = new GameObject(
-    //   "wall",
-    //   { posX: (width * 3) / 4, posY: height },
-    //   { width: width / 2, height: WALLTHICK }
-    // ).addComponents([new Physics2DComponent(ground2)]);
-    // this.goManager.push(groundRGameObject);
   }
 
   async update() {
     // 游戏逻辑之后移除
-    onUpdate();
 
     // Add an animation loop callback to the application's ticker.
     this.app.ticker.add((time) => {
+      onUpdate();
       // physics update
       const updatedPhyMap = this.phyManager.getUpdatedMap();
 
@@ -213,12 +161,6 @@ class GameGenerator {
         }
       }
       updatedPhyMap.clear();
-
-      // const bunny = this.app.stage.getChildAt(0)
-
-      // if(bunny){
-      //     bunny.rotation += 0.1 * time.deltaTime;
-      // }
 
       if (document.getElementById("debugObject")) {
         document.getElementById("debugObject")!.innerHTML = this.app.stage

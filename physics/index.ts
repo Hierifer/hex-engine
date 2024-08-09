@@ -34,21 +34,23 @@ class PhysicsManager {
     this.options = { width, height };
 
     // create a renderer
-    const render = this.Render.create({
-      element: document.getElementById(this.target)!,
-      engine: this.engine,
-      options: {
-        width,
-        height,
-        wireframes: false,
-        background: "transparent",
-      },
-    });
-    render.canvas.style.position = "absolute";
-    render.canvas.style.top = "0px";
 
     // run the renderer
-    if (this.debugMode) this.Render.run(render);
+    if (this.debugMode) {
+      const render = this.Render.create({
+        element: document.getElementById(this.target)!,
+        engine: this.engine,
+        options: {
+          width,
+          height,
+          wireframes: false,
+          background: "transparent",
+        },
+      });
+      render.canvas.style.position = "absolute";
+      render.canvas.style.top = "0px";
+      this.Render.run(render);
+    }
 
     // create runner
     const runner = Runner.create();
