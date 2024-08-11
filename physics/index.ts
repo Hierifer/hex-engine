@@ -9,6 +9,24 @@ type IPM_OPTIONS = {
   height?: number;
 };
 
+export type CollisionInfo =
+  | {
+      nnid: { bodyA: string | undefined; bodyB: string | undefined };
+      data: Matter.Collision;
+    }[];
+
+// const filterArray = <T>(arr: T[], removed: T, func: (a: T, b: T) => boolean) => {
+//   let curIndex = 0;
+//   let c = 0;
+//   while (curIndex < arr.length) {
+//     if (func(arr[c], removed)) {
+//       arr[curIndex] = arr[c];
+//       curIndex++;
+//     }
+//     c++;
+//   }
+// };
+
 class PhysicsManager {
   Engine = Matter.Engine;
   Bodies = Matter.Bodies;
@@ -19,6 +37,8 @@ class PhysicsManager {
   private target = DEFAULT_TARGET_LOC;
   options = { width: 1000, height: 1000 };
   pBodyMap = new Map<string, Matter.Body>();
+  rpBodyMap = new Map<string, string>();
+  collisionSpaces = new Map<string, Matter.Detector>();
 
   debugMode = false;
 
@@ -60,10 +80,51 @@ class PhysicsManager {
 
     return this;
   }
-
+  createDetector(space: string) {
+    const detector = Matter.Detector.create();
+    this.collisionSpaces.set(space, detector);
+    return detector;
+  }
+  findDetector(space: string) {
+    return this.collisionSpaces.get(space);
+  }
   setDebugMode(enable: boolean) {
     this.debugMode = enable;
     // TO-DO need fix
+  }
+  triggerDetector(space: string): CollisionInfo {
+    const tmp = this.collisionSpaces.get(space);
+
+    const cols = tmp && Matter.Detector.collisions(tmp);
+
+    if (cols) {
+      // format cols
+      return cols.map((col) => {
+        return {
+          data: col,
+          nnid: {
+            bodyA: this.rpBodyMap.get(col.bodyA.id.toString()),
+            bodyB: this.rpBodyMap.get(col.bodyB.id.toString()),
+          },
+        };
+      });
+    }
+
+    return [];
+  }
+  deleteBodyByGOId(gameObjectId: string) {
+    const bodyId = this.pBodyMap.get(gameObjectId);
+    if (bodyId) {
+      this.pBodyMap.delete(gameObjectId);
+      this.rpBodyMap.delete(bodyId.id.toString());
+    }
+  }
+  deleteBodyByBodyId(physicsId: string) {
+    const goId = this.rpBodyMap.get(physicsId);
+    if (goId) {
+      this.pBodyMap.delete(goId);
+      this.rpBodyMap.delete(physicsId);
+    }
   }
 
   /**
@@ -72,16 +133,40 @@ class PhysicsManager {
    * @param param1
    */
   removeObjsFromWorld(gameObjects: Array<GameObject>) {
-    const objs = new Array<Matter.Body>();
+    const waitDeletes = new Array<Matter.Body>();
     for (let i = 0; i < gameObjects.length; i++) {
       const curGO = gameObjects[i];
       const body = curGO.getPhysics2DBody();
+      const collider = curGO.getPhysics2DCollider();
+      if (
+        collider &&
+        this.findDetector(collider.space) &&
+        this.findDetector(collider.space)!.bodies !== undefined
+      ) {
+        let curIndex = 0;
+        let found = -1;
+        const tmp = this.findDetector(collider.space)!.bodies;
+        while (curIndex < tmp.length) {
+          if (tmp[curIndex].id === collider.body.id) {
+            found = curIndex;
+          }
+          curIndex++;
+        }
+
+        tmp.splice(found, 1);
+        console.log(tmp);
+        Matter.Detector.setBodies(this.findDetector(collider.space)!, tmp);
+        console.log(this.findDetector(collider.space)!.bodies);
+        console.log(collider);
+        console.log(found);
+        console.log("done!");
+      }
       if (body !== null) {
-        this.pBodyMap.delete(curGO.id);
-        objs.push(body);
+        this.deleteBodyByGOId(curGO.id);
+        waitDeletes.push(body);
       }
     }
-    this.Composite.remove(this.engine.world, objs);
+    this.Composite.remove(this.engine.world, waitDeletes);
     return this;
   }
 
@@ -102,6 +187,7 @@ class PhysicsManager {
       const body = curGO.getPhysics2DBody();
       if (body !== null) {
         this.pBodyMap.set(curGO.id, body);
+        this.rpBodyMap.set(body.id.toString(), curGO.id);
         objs.push(body);
       } else {
         // 可能存在有 GO 没有物理对象

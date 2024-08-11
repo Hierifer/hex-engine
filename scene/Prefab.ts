@@ -7,6 +7,7 @@ import {
 import { Sprite, Assets, Graphics, FederatedPointerEvent } from "pixi.js";
 type Status = "pending" | "ready";
 import Matter from "matter-js";
+
 export abstract class Prefab {
   label = "";
   constructor(label: string) {
@@ -15,6 +16,16 @@ export abstract class Prefab {
   abstract generate(params: object): Promise<GameObject>;
 }
 
+// const defaultEvent = () => {
+//   return (t: FederatedPointerEvent) => {
+//     console.log("illegal event: " + t.detail);
+//   };
+// };
+
+/**
+ * 游戏预制件，可以理解为 GameObject 工厂
+ *
+ */
 export class GeometryPrefab extends Prefab {
   label = "";
   src = "";
@@ -22,8 +33,10 @@ export class GeometryPrefab extends Prefab {
   width = 0;
   height = 0;
   background = 0x000000;
-
-  onClick: (t: FederatedPointerEvent) => void;
+  onHover: ((t: FederatedPointerEvent) => void) | undefined;
+  onClick: ((t: FederatedPointerEvent) => void) | undefined;
+  onPointerout: ((t: FederatedPointerEvent) => void) | undefined;
+  onPointermove: ((t: FederatedPointerEvent) => void) | undefined;
   constructor(
     label: string,
     {
@@ -31,11 +44,17 @@ export class GeometryPrefab extends Prefab {
       height,
       background,
       onClick,
+      onHover,
+      onPointerout,
+      onPointermove,
     }: {
       width: number;
       height: number;
       background?: number | string;
       onClick?: (t: FederatedPointerEvent) => void;
+      onHover?: (t: FederatedPointerEvent) => void;
+      onPointerout?: (t: FederatedPointerEvent) => void;
+      onPointermove?: (t: FederatedPointerEvent) => void;
     }
   ) {
     super(label);
@@ -43,7 +62,11 @@ export class GeometryPrefab extends Prefab {
     this.height = height;
     // @ts-expect-error: use it later
     this.background = background || 0x000000;
-    this.onClick = onClick ?? ((t: any) => {});
+
+    this.onClick = onClick;
+    this.onHover = onHover;
+    this.onPointerout = onPointerout;
+    this.onPointermove = onPointermove;
   }
 
   /**
@@ -59,14 +82,17 @@ export class GeometryPrefab extends Prefab {
         .stroke({ width: 1, color: 0xffd900 });
       //   rect.eventMode = "static";
       //   rect.cursor = "pointer";
-      rect.on("pointerdown", this.onClick);
+      if (this.onClick) rect.on("pointerdown", this.onClick);
+      if (this.onHover) rect.on("pointerover", this.onHover);
+      if (this.onPointermove) rect.on("pointermove", this.onPointermove);
+      if (this.onPointerout) rect.on("pointerout", this.onPointerout);
 
       rect.eventMode = "static";
       const wall = Matter.Bodies.rectangle(x, y, this.width, this.height, {
         isStatic: true,
       });
       return new GameObject(
-        "wall",
+        this.label,
         { posX: x, posY: y },
         { width: this.width, height: this.height }
       ).addComponents([

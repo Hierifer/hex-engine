@@ -1,18 +1,42 @@
-import { Application, Assets, Sprite, Graphics, Polygon } from "pixi.js";
+import { Application } from "pixi.js";
 import PhysiceManager from "../physics/index";
+import { CollisionInfo } from "../physics/index";
 import { GameObject } from "../scene/GameObject";
 import {
   SpriteComponent,
   GraphicComponent,
   Physics2DComponent,
 } from "../scene/Component";
-import Matter from "matter-js";
 
 import { DEFAULT_TARGET_LOC } from "../utils/constant";
 import PhysicsManager from "../physics/index";
 
+const DebugWarningPrint = true;
+
+const log = (() => {
+  if (DebugWarningPrint) {
+    return (content: string | object | Array<unknown>, allowPrint: boolean) => {
+      if (!allowPrint) {
+        return;
+      }
+      let returnTxt = content.toString();
+      if (typeof content === "object") {
+        try {
+          returnTxt = JSON.stringify(content);
+        } catch (e) {
+          // downgrade toString
+          returnTxt = content.toString();
+        }
+      }
+      console.log(returnTxt);
+    };
+  } else {
+    return () => {};
+  }
+})();
+
 // 游戏逻辑之后移除
-import { onStart, onUpdate } from "@/views/gameplay/script/gm";
+import { onStart, onPrepare, onUpdate } from "@/views/gameplay/script/gm";
 
 // 对象类型定义
 type GG_CONFIG = {
@@ -23,9 +47,6 @@ type GG_CONFIG_SIZE = {
   width: number;
   height: number;
 };
-type GG_CONFIG_DEBUG_OPTIONS = {
-  showPhysics: boolean;
-};
 
 class GameGenerator {
   status = "init";
@@ -34,8 +55,9 @@ class GameGenerator {
   size: GG_CONFIG_SIZE = { width: 1000, height: 1000 };
   goManager: Array<GameObject> = new Array<GameObject>();
   phyManager: PhysicsManager;
+  collisionEffect = new Map<string, (t: CollisionInfo) => void>();
 
-  debugOptions: GG_CONFIG_DEBUG_OPTIONS = {
+  debugOptions = {
     showPhysics: false,
   };
 
@@ -85,6 +107,18 @@ class GameGenerator {
     }
   }
   resize() {}
+  createCollisionDetector(space: string, func: (c: CollisionInfo) => void) {
+    this.collisionEffect.set(space, func);
+    return this.phyManager.createDetector(space);
+  }
+  addCollisionListener(space: string, gameObject: GameObject) {
+    const dSpace = this.phyManager.findDetector(space);
+    const curBody = gameObject.getPhysics2DBody();
+    if (curBody) {
+      dSpace && dSpace.bodies.push(curBody);
+    }
+    return;
+  }
   add2GameManager(go: GameObject) {
     if (
       this.goManager.find((tmp) => {
@@ -95,6 +129,7 @@ class GameGenerator {
       return;
     }
     // Add to stage.
+    // TO-DO 全局扫描
     if (go.findComponent("sprite") !== undefined) {
       const sprite = go.findComponent("sprite") as SpriteComponent;
       this.app.stage.addChild(sprite.getSprite());
@@ -106,9 +141,13 @@ class GameGenerator {
     if (go.findComponent("physics2d") !== undefined) {
       this.phyManager.addObjs2World([go]);
     }
+    // TO-DO auto detect collider
     this.goManager.push(go);
   }
-  removeGameObject(uuid: string) {
+  removeGameObject(uuid: string | undefined) {
+    if (!uuid) {
+      return;
+    }
     const go = this.goManager.find((go) => {
       return go.getId() === uuid;
     });
@@ -121,8 +160,7 @@ class GameGenerator {
     }
     const physics2d = go.findComponent("physics2d");
     if (physics2d instanceof Physics2DComponent) {
-      // @ts-expect-error: check here
-      this.phyManager.removeObjsFromWorld([physics2d.getBody()]);
+      this.phyManager.removeObjsFromWorld([go]);
     }
   }
   async load() {
@@ -136,21 +174,20 @@ class GameGenerator {
       width: this.app.screen.width,
       height: this.app.screen.height,
     };
+    await onPrepare(this);
     // 之后动态加载
     onStart(this);
   }
 
   async update() {
     // 游戏逻辑之后移除
-
-    // Add an animation loop callback to the application's ticker.
-
+    let lastDetecor = 0;
     this.app.ticker.add((time) => {
-      onUpdate();
-      // physics update
+      // onUpdateBeforePhysics();
+
+      // 物理自动更新
       const updatedPhyMap = this.phyManager.getUpdatedMap();
 
-      // GameObject 的 update 应该都执行在这里
       for (let i = 0; i < this.goManager.length; i++) {
         const curGO = this.goManager[i];
         const ro = curGO.findComponent("sprite");
@@ -164,6 +201,20 @@ class GameGenerator {
       }
       updatedPhyMap.clear();
 
+      // 物理碰撞更新：开发者逻辑
+      const detectPeriod = Math.floor(time.lastTime / 100);
+      if (detectPeriod !== lastDetecor) {
+        [...this.collisionEffect.keys()].forEach((space) => {
+          const col = this.phyManager.triggerDetector(space);
+          const effect = this.collisionEffect.get(space);
+          if (effect) effect(col);
+        });
+        lastDetecor = detectPeriod;
+      }
+
+      //
+      // GameObject 的 update 应该都执行在这里
+
       if (document.getElementById("debugObject")) {
         document.getElementById("debugObject")!.innerHTML = this.app.stage
           .getChildrenByLabel("Sprite")
@@ -171,6 +222,7 @@ class GameGenerator {
             return prev + "," + cur.label;
           }, "");
       }
+      onUpdate();
     });
   }
 }

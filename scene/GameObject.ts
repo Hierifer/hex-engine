@@ -1,4 +1,8 @@
-import { Component, Physics2DComponent } from "./Component";
+import {
+  Component,
+  Physics2DComponent,
+  Physics2DColliderComponent,
+} from "./Component";
 import { nanoid } from "nanoid";
 
 export class GameObject {
@@ -48,6 +52,14 @@ export class GameObject {
     const pcomp = this.findComponent("physics2d");
     if (pcomp !== void 0 && pcomp instanceof Physics2DComponent) {
       return pcomp.getBody();
+    } else {
+      return null;
+    }
+  }
+  getPhysics2DCollider() {
+    const pcomp = this.findComponent("2dCollider");
+    if (pcomp !== void 0 && pcomp instanceof Physics2DColliderComponent) {
+      return pcomp.getCollider();
     } else {
       return null;
     }

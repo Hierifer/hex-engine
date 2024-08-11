@@ -29,7 +29,7 @@ export class SpriteComponent extends Component {
     return this.sprite;
   }
 
-  setSprite(key: string, value: any) {
+  setSprite(key: string, value: unknown) {
     // @ts-expect-error: use it later
     this.sprite[key] = value;
   }
@@ -50,7 +50,7 @@ export class GraphicComponent extends Component {
     return this.graphic;
   }
 
-  setGraphic(key: string, value: any) {
+  setGraphic(key: string, value: unknown) {
     // @ts-expect-error: use it later
     this.graphic[key] = value;
   }
@@ -65,5 +65,18 @@ export class Physics2DComponent extends Component {
 
   getBody() {
     return this.body;
+  }
+}
+
+export class Physics2DColliderComponent extends Component {
+  space: string;
+  body: Matter.Body;
+  constructor(space: string, mBody: Matter.Body) {
+    super("2dCollider");
+    this.space = space;
+    this.body = mBody;
+  }
+  getCollider() {
+    return { space: this.space, body: this.body };
   }
 }
