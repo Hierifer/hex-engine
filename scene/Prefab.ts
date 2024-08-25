@@ -1,8 +1,10 @@
 import GameObject from "./GameObject";
 import {
+  Component,
   SpriteComponent,
   GraphicComponent,
   Physics2DComponent,
+  Physics2DColliderComponent,
 } from "./Component";
 import { Sprite, Assets, Graphics, FederatedPointerEvent } from "pixi.js";
 type Status = "pending" | "ready";
@@ -74,7 +76,7 @@ export class GeometryPrefab extends Prefab {
    * @param param0
    * @returns
    */
-  generate({ x, y }: { x: number; y: number }) {
+  generate({ x, y, space }: { x: number; y: number; space?: string }) {
     return Promise.resolve().then(() => {
       const rect = new Graphics()
         .rect(x - this.width / 2, y - this.height / 2, this.width, this.height)
@@ -88,17 +90,27 @@ export class GeometryPrefab extends Prefab {
       if (this.onPointerout) rect.on("pointerout", this.onPointerout);
 
       rect.eventMode = "static";
-      const wall = Matter.Bodies.rectangle(x, y, this.width, this.height, {
-        isStatic: true,
-      });
+      const staticBody = Matter.Bodies.rectangle(
+        x,
+        y,
+        this.width,
+        this.height,
+        {
+          isStatic: true,
+        }
+      );
+      const components: Component[] = [
+        new GraphicComponent(rect),
+        new Physics2DComponent(staticBody),
+      ];
+      if (space) {
+        components.push(new Physics2DColliderComponent(space, staticBody));
+      }
       return new GameObject(
         this.label,
         { posX: x, posY: y },
         { width: this.width, height: this.height }
-      ).addComponents([
-        new GraphicComponent(rect),
-        new Physics2DComponent(wall),
-      ]);
+      ).addComponents(components);
     });
   }
 }

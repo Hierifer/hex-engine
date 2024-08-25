@@ -6,6 +6,7 @@ import {
   SpriteComponent,
   GraphicComponent,
   Physics2DComponent,
+  Physics2DColliderComponent,
 } from "../scene/Component";
 
 import { DEFAULT_TARGET_LOC } from "../utils/constant";
@@ -129,7 +130,6 @@ class GameGenerator {
       return;
     }
     // Add to stage.
-    // TO-DO 全局扫描
     if (go.findComponent("sprite") !== undefined) {
       const sprite = go.findComponent("sprite") as SpriteComponent;
       this.app.stage.addChild(sprite.getSprite());
@@ -140,6 +140,12 @@ class GameGenerator {
     }
     if (go.findComponent("physics2d") !== undefined) {
       this.phyManager.addObjs2World([go]);
+    }
+    if (go.findComponent("2dCollider") !== undefined) {
+      const collider = go.findComponent(
+        "2dCollider"
+      ) as Physics2DColliderComponent;
+      this.addCollisionListener(collider.space, go);
     }
     // TO-DO auto detect collider
     this.goManager.push(go);
@@ -162,6 +168,18 @@ class GameGenerator {
     if (physics2d instanceof Physics2DComponent) {
       this.phyManager.removeObjsFromWorld([go]);
     }
+  }
+  getGameObjectById(uuid: string) {
+    return this.goManager.find((go) => {
+      return go.getId() === uuid;
+    });
+  }
+  getGameObjectByPhysicsBodyId(bodyId: number) {
+    const ogid = this.phyManager.getOGidByBodyId(bodyId.toString());
+    if (ogid) {
+      return this.getGameObjectById(ogid);
+    }
+    return undefined;
   }
   async load() {
     // Intialize the application.
@@ -202,7 +220,7 @@ class GameGenerator {
       updatedPhyMap.clear();
 
       // 物理碰撞更新：开发者逻辑
-      const detectPeriod = Math.floor(time.lastTime / 100);
+      const detectPeriod = Math.floor(time.lastTime / 50);
       if (detectPeriod !== lastDetecor) {
         [...this.collisionEffect.keys()].forEach((space) => {
           const col = this.phyManager.triggerDetector(space);

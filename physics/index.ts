@@ -15,18 +15,6 @@ export type CollisionInfo =
       data: Matter.Collision;
     }[];
 
-// const filterArray = <T>(arr: T[], removed: T, func: (a: T, b: T) => boolean) => {
-//   let curIndex = 0;
-//   let c = 0;
-//   while (curIndex < arr.length) {
-//     if (func(arr[c], removed)) {
-//       arr[curIndex] = arr[c];
-//       curIndex++;
-//     }
-//     c++;
-//   }
-// };
-
 class PhysicsManager {
   Engine = Matter.Engine;
   Bodies = Matter.Bodies;
@@ -40,9 +28,9 @@ class PhysicsManager {
   rpBodyMap = new Map<string, string>();
   collisionSpaces = new Map<string, Matter.Detector>();
 
-  debugMode = false;
+  debugMode = true;
 
-  constructor(target: string, options?: IPM_OPTIONS, debugMode = false) {
+  constructor(target: string, options?: IPM_OPTIONS, debugMode = true) {
     this.target = target;
     this.options = this.options || options;
     this.debugMode = debugMode;
@@ -67,6 +55,7 @@ class PhysicsManager {
           background: "transparent",
         },
       });
+      console.log("Debuged!@!!!");
       render.canvas.style.position = "absolute";
       render.canvas.style.top = "0px";
       this.Render.run(render);
@@ -154,12 +143,7 @@ class PhysicsManager {
         }
 
         tmp.splice(found, 1);
-        console.log(tmp);
         Matter.Detector.setBodies(this.findDetector(collider.space)!, tmp);
-        console.log(this.findDetector(collider.space)!.bodies);
-        console.log(collider);
-        console.log(found);
-        console.log("done!");
       }
       if (body !== null) {
         this.deleteBodyByGOId(curGO.id);
@@ -195,6 +179,9 @@ class PhysicsManager {
     }
     this.Composite.add(this.engine.world, objs);
     return this;
+  }
+  getOGidByBodyId(bodyId: string) {
+    return this.rpBodyMap.get(bodyId);
   }
   getUpdatedMap() {
     const out = new Map<string, { pos: Matter.Vector; angle: number }>();
