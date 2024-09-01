@@ -42,7 +42,11 @@ import { onStart, onPrepare, onUpdate } from "@/views/gameplay/script/gm";
 // 对象类型定义
 type GG_CONFIG = {
   target?: string;
-  options?: GG_CONFIG_SIZE;
+  options?: {
+    width?: number;
+    height?: number;
+    debugSignal?: Function;
+  };
 };
 type GG_CONFIG_SIZE = {
   width: number;
@@ -57,13 +61,16 @@ class GameGenerator {
   goManager: Array<GameObject> = new Array<GameObject>();
   phyManager: PhysicsManager;
   collisionEffect = new Map<string, (t: CollisionInfo) => void>();
+  debugSignal = new Function();
 
   debugOptions = {
     showPhysics: false,
+    updateGOPanel: true,
   };
 
   constructor(config: GG_CONFIG) {
     this.targetLoc = config.target || DEFAULT_TARGET_LOC;
+    this.debugSignal = config.options?.debugSignal || this.debugSignal;
     this.app = new Application();
     this._init();
 
@@ -91,7 +98,7 @@ class GameGenerator {
    */
   _destory() {}
   getDebugGameObjects() {
-    return this.app.stage.getChildrenByLabel("Sprite");
+    return this.goManager;
   }
   mount() {
     // Then adding the application's canvas to the DOM body.
@@ -168,6 +175,7 @@ class GameGenerator {
     if (physics2d instanceof Physics2DComponent) {
       this.phyManager.removeObjsFromWorld([go]);
     }
+    this.goManager.splice(this.goManager.indexOf(go), 1);
   }
   getGameObjectById(uuid: string) {
     return this.goManager.find((go) => {
@@ -181,6 +189,9 @@ class GameGenerator {
     }
     return undefined;
   }
+  // useDebugSignal(setSignal: (...args: unknown[]) => void) {
+  //   this.invokeDebugSignal = setSignal;
+  // }
   async load() {
     // Intialize the application.
     await this.app.init({
@@ -230,17 +241,21 @@ class GameGenerator {
         lastDetecor = detectPeriod;
       }
 
+      onUpdate();
+
+      // 如果 goManager 对象改变
+      this.debugSignal(time.lastTime);
       //
       // GameObject 的 update 应该都执行在这里
-
-      if (document.getElementById("debugObject")) {
-        document.getElementById("debugObject")!.innerHTML = this.app.stage
-          .getChildrenByLabel("Sprite")
-          .reduce((prev, cur) => {
-            return prev + "," + cur.label;
-          }, "");
-      }
-      onUpdate();
+      // if (this.debugOptions.updateGOPanel) {
+      //   if (document.getElementById("debugObject")) {
+      //     document.getElementById("debugObject")!.innerHTML = this.app.stage
+      //       .getChildrenByLabel("Sprite")
+      //       .reduce((prev, cur) => {
+      //         return prev + "," + cur.label;
+      //       }, "");
+      //   }
+      // }
     });
   }
 }

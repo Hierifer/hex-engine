@@ -65,5 +65,13 @@ export class GameObject {
     }
   }
   removeComponents() {}
+  getDebugObject() {
+    return {
+      id: this.id,
+      name: this.label,
+      geo: `${this.geo.posX}, ${this.geo.posY}`,
+      comps: this.components.map((comp) => comp.label),
+    };
+  }
 }
 export default GameObject;

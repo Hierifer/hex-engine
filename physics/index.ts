@@ -55,7 +55,6 @@ class PhysicsManager {
           background: "transparent",
         },
       });
-      console.log("Debuged!@!!!");
       render.canvas.style.position = "absolute";
       render.canvas.style.top = "0px";
       this.Render.run(render);

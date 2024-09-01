@@ -76,7 +76,17 @@ export class GeometryPrefab extends Prefab {
    * @param param0
    * @returns
    */
-  generate({ x, y, space }: { x: number; y: number; space?: string }) {
+  generate({
+    x,
+    y,
+    space,
+    hasPhysics,
+  }: {
+    x: number;
+    y: number;
+    space?: string;
+    hasPhysics?: boolean;
+  }) {
     return Promise.resolve().then(() => {
       const rect = new Graphics()
         .rect(x - this.width / 2, y - this.height / 2, this.width, this.height)
@@ -99,10 +109,10 @@ export class GeometryPrefab extends Prefab {
           isStatic: true,
         }
       );
-      const components: Component[] = [
-        new GraphicComponent(rect),
-        new Physics2DComponent(staticBody),
-      ];
+      const components: Component[] = [new GraphicComponent(rect)];
+      if (hasPhysics ?? true) {
+        components.push(new Physics2DComponent(staticBody));
+      }
       if (space) {
         components.push(new Physics2DColliderComponent(space, staticBody));
       }
