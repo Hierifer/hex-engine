@@ -36,9 +36,9 @@ class PhysicsManager {
     this.debugMode = debugMode;
   }
   destory(){
-    delete this.pBodyMap
-    delete this.rpBodyMap
-    delete this.collisionSpaces
+    // delete this.pBodyMap
+    // delete this.rpBodyMap
+    // delete this.collisionSpaces
   }
   init(width: number, height: number) {
     // module aliases

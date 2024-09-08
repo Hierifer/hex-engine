@@ -4,7 +4,7 @@ export const fixNumber = (val: number, tofix = 2) => {
 
 export const recv = (target: any, func: (...a:any[]) => unknown) => {
     if(Object.getPrototypeOf(target) === Array.prototype){
-        return target.map((val) => {return recv(val, func)})
+        return target.map((val: any) => {return recv(val, func)})
     }
     if(typeof target === 'object'){
         Object.keys(target).forEach((k) => {
