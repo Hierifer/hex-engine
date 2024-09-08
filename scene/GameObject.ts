@@ -1,9 +1,12 @@
 import {
   Component,
+  SpriteComponent,
   Physics2DComponent,
   Physics2DColliderComponent,
 } from "./Component";
 import { nanoid } from "nanoid";
+
+import { fixNumber, recv } from "../utils/math";
 
 export class GameObject {
   id = "";
@@ -16,17 +19,22 @@ export class GameObject {
     scaleY: 1,
   };
   label = "";
+  // prefab 是组的概念可以属于很多个组，方便物理引擎和逻辑查找
+  prefab = "";
   attrs = { width: 100, height: 100 };
   components: Array<Component> = [];
+  
   constructor(
     label: string,
     geo: Partial<GO_GEOMETRY>,
-    attrs: Partial<{ width: number; height: number }>
+    attrs: Partial<{ width: number; height: number }>,
+    prefab = "",
   ) {
     this.id = nanoid();
     this.label = label;
     this.geo = { ...this.geo, ...geo };
     this.attrs = { ...this.attrs, ...attrs };
+    this.prefab = prefab
   }
   _mountd() {}
   _destory() {}
@@ -43,10 +51,33 @@ export class GameObject {
   getId() {
     return this.id;
   }
+  getGeoTop() {
+    return this.geo.posY - this.attrs.height / 2
+  }
+  getGeoBottom() {
+    return this.geo.posY + this.attrs.height / 2
+  }
   findComponent(label: string) {
     return this.components.find((comp) => {
       return comp.label === label;
     });
+  }
+  // 可用来物理系统的同步
+  setGeo({pos, rot}: { pos: import("matter-js").Vector; rot: number; }) {
+    const [{x, y}, rotX] = recv([pos, rot], fixNumber)
+    this.geo.posX = x
+    this.geo.posY = y
+    this.geo.rotX = rotX
+
+    // effect 可优化成钩子
+    const ro = this.findComponent("sprite");
+    if (ro !== undefined && ro instanceof SpriteComponent) {
+      ro.setSprite(
+        "position",
+        pos
+      );
+      ro.setSprite("rotation", rot);
+    }
   }
   getPhysics2DBody() {
     const pcomp = this.findComponent("physics2d");
@@ -73,5 +104,9 @@ export class GameObject {
       comps: this.components.map((comp) => comp.label),
     };
   }
+  static quick_distance(a: GameObject, b: GameObject){
+    return Math.abs(a.geo.posX - b.geo.posX) + Math.abs(a.geo.posY - b.geo.posY)
+  }
 }
+
 export default GameObject;

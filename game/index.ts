@@ -29,7 +29,7 @@ const log = (() => {
           returnTxt = content.toString();
         }
       }
-      console.log(returnTxt);
+      //console.log(returnTxt);
     };
   } else {
     return () => {};
@@ -46,6 +46,7 @@ type GG_CONFIG = {
     width?: number;
     height?: number;
     debugSignal?: Function;
+    baseSignalSend?: Function;
   };
 };
 type GG_CONFIG_SIZE = {
@@ -62,6 +63,7 @@ class GameGenerator {
   phyManager: PhysicsManager;
   collisionEffect = new Map<string, (t: CollisionInfo) => void>();
   debugSignal = new Function();
+  baseSignalSend = new Function();
 
   debugOptions = {
     showPhysics: false,
@@ -71,6 +73,7 @@ class GameGenerator {
   constructor(config: GG_CONFIG) {
     this.targetLoc = config.target || DEFAULT_TARGET_LOC;
     this.debugSignal = config.options?.debugSignal || this.debugSignal;
+    this.baseSignalSend = config.options?.baseSignalSend || this.baseSignalSend;
     this.app = new Application();
     this._init();
 
@@ -81,38 +84,38 @@ class GameGenerator {
     );
   }
   async _init() {
-    // Create a PixiJS application.
     await this.load();
-
-    await this.mount();
-
-    this.status = "mounted";
-
     this.update();
 
     // 初始化物理系统
     this.phyManager.init(this.app.screen.width, this.app.screen.height);
   }
+  restart(){
+    this.unmount()
+    this.goManager = new Array<GameObject>();
+    this.app = new Application();
+    this._init();
+
+    this.phyManager = new PhysiceManager(
+      this.targetLoc,
+      {},
+      this.debugOptions.showPhysics
+    );
+  }
+  _soft_destory() {
+  }
   /**
    * 解
    */
-  _destory() {}
+  _destory() {
+    // this.app.
+    // this.phyManager
+  }
+  stop(){
+    this.app.ticker.stop()
+  }
   getDebugGameObjects() {
     return this.goManager;
-  }
-  mount() {
-    // Then adding the application's canvas to the DOM body.
-    if (this.targetLoc === DEFAULT_TARGET_LOC) {
-      document.body.appendChild(this.app.canvas);
-    } else {
-      if (document.getElementById(this.targetLoc) !== null) {
-        document.getElementById(this.targetLoc)?.appendChild(this.app.canvas);
-      } else {
-        // fallback
-        this.targetLoc = DEFAULT_TARGET_LOC;
-        document.body.appendChild(this.app.canvas);
-      }
-    }
   }
   resize() {}
   createCollisionDetector(space: string, func: (c: CollisionInfo) => void) {
@@ -177,6 +180,11 @@ class GameGenerator {
     }
     this.goManager.splice(this.goManager.indexOf(go), 1);
   }
+  getGameObjectByPrefab(prefab: string){
+    return this.goManager.filter((go) => {
+      return go.prefab === prefab
+    })
+  }
   getGameObjectById(uuid: string) {
     return this.goManager.find((go) => {
       return go.getId() === uuid;
@@ -189,9 +197,28 @@ class GameGenerator {
     }
     return undefined;
   }
-  // useDebugSignal(setSignal: (...args: unknown[]) => void) {
-  //   this.invokeDebugSignal = setSignal;
-  // }
+  sendSignal(event: string, param: Record<string, string>){
+    if(typeof this.baseSignalSend === 'function'){
+      this.baseSignalSend(event, param)
+    }
+  }
+  mount() {
+    // Then adding the application's canvas to the DOM body.
+    if (this.targetLoc === DEFAULT_TARGET_LOC) {
+      document.body.appendChild(this.app.canvas);
+    } else {
+      if (document.getElementById(this.targetLoc) !== null) {
+        document.getElementById(this.targetLoc)?.appendChild(this.app.canvas);
+      } else {
+        // fallback
+        this.targetLoc = DEFAULT_TARGET_LOC;
+        document.body.appendChild(this.app.canvas);
+      }
+    }
+  }
+  unmount(){
+    this.app.canvas.remove()
+  }
   async load() {
     // Intialize the application.
     await this.app.init({
@@ -204,13 +231,16 @@ class GameGenerator {
       height: this.app.screen.height,
     };
     await onPrepare(this);
+    this.mount();
     // 之后动态加载
     onStart(this);
+    this.status = "mounted";
   }
 
   async update() {
     // 游戏逻辑之后移除
     let lastDetecor = 0;
+    
     this.app.ticker.add((time) => {
       // onUpdateBeforePhysics();
 
@@ -219,14 +249,10 @@ class GameGenerator {
 
       for (let i = 0; i < this.goManager.length; i++) {
         const curGO = this.goManager[i];
-        const ro = curGO.findComponent("sprite");
-        if (ro !== undefined && ro instanceof SpriteComponent) {
-          ro.setSprite(
-            "position",
-            updatedPhyMap.get(curGO.id)?.pos || { x: 0, y: 0 }
-          );
-          ro.setSprite("rotation", updatedPhyMap.get(curGO.id)?.angle || 0);
-        }
+        curGO.setGeo({
+          pos: updatedPhyMap.get(curGO.id)?.pos || { x: 0, y: 0 },
+          rot: updatedPhyMap.get(curGO.id)?.angle || 0
+        })
       }
       updatedPhyMap.clear();
 
@@ -241,21 +267,10 @@ class GameGenerator {
         lastDetecor = detectPeriod;
       }
 
-      onUpdate();
+      onUpdate(this, time);
 
       // 如果 goManager 对象改变
       this.debugSignal(time.lastTime);
-      //
-      // GameObject 的 update 应该都执行在这里
-      // if (this.debugOptions.updateGOPanel) {
-      //   if (document.getElementById("debugObject")) {
-      //     document.getElementById("debugObject")!.innerHTML = this.app.stage
-      //       .getChildrenByLabel("Sprite")
-      //       .reduce((prev, cur) => {
-      //         return prev + "," + cur.label;
-      //       }, "");
-      //   }
-      // }
     });
   }
 }

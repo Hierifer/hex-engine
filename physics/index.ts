@@ -35,6 +35,11 @@ class PhysicsManager {
     this.options = this.options || options;
     this.debugMode = debugMode;
   }
+  destory(){
+    delete this.pBodyMap
+    delete this.rpBodyMap
+    delete this.collisionSpaces
+  }
   init(width: number, height: number) {
     // module aliases
     const Runner = Matter.Runner;
