@@ -28,14 +28,14 @@ class PhysicsManager {
   rpBodyMap = new Map<string, string>();
   collisionSpaces = new Map<string, Matter.Detector>();
 
-  debugMode = true;
+  debugMode = false;
 
   constructor(target: string, options?: IPM_OPTIONS, debugMode = true) {
     this.target = target;
     this.options = this.options || options;
     this.debugMode = debugMode;
   }
-  destory(){
+  destory() {
     // delete this.pBodyMap
     // delete this.rpBodyMap
     // delete this.collisionSpaces
@@ -47,7 +47,7 @@ class PhysicsManager {
     this.options = { width, height };
 
     // create a renderer
-
+    //console.log(this.debugMode)
     // run the renderer
     if (this.debugMode) {
       const render = this.Render.create({
@@ -56,8 +56,9 @@ class PhysicsManager {
         options: {
           width,
           height,
-          wireframes: false,
-          background: "transparent",
+          hasBounds: true,
+          wireframes: true,
+          wireframeBackground: "transparent",
         },
       });
       render.canvas.style.position = "absolute";
@@ -73,6 +74,27 @@ class PhysicsManager {
 
     return this;
   }
+  setDebugMode(enable: boolean) {
+    if (enable) {
+      const { width, height } = this.options;
+      const render = this.Render.create({
+        element: document.getElementById(this.target)!,
+        engine: this.engine,
+        options: {
+          width,
+          height,
+          wireframes: true,
+          background: "transparent",
+        },
+      });
+      render.canvas.style.position = "absolute";
+      render.canvas.style.top = "0px";
+      this.Render.run(render);
+    } else {
+      document.getElementById(this.target)?.remove();
+    }
+    this.debugMode = enable;
+  }
   createDetector(space: string) {
     const detector = Matter.Detector.create();
     this.collisionSpaces.set(space, detector);
@@ -80,10 +102,6 @@ class PhysicsManager {
   }
   findDetector(space: string) {
     return this.collisionSpaces.get(space);
-  }
-  setDebugMode(enable: boolean) {
-    this.debugMode = enable;
-    // TO-DO need fix
   }
   triggerDetector(space: string): CollisionInfo {
     const tmp = this.collisionSpaces.get(space);

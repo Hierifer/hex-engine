@@ -7,6 +7,7 @@ import {
   GraphicComponent,
   Physics2DComponent,
   Physics2DColliderComponent,
+  SpineComponent,
 } from "../scene/Component";
 
 import { DEFAULT_TARGET_LOC } from "../utils/constant";
@@ -66,7 +67,7 @@ class GameGenerator {
   baseSignalSend = new Function();
 
   debugOptions = {
-    showPhysics: false,
+    showPhysics: true,
     updateGOPanel: true,
   };
 
@@ -90,8 +91,12 @@ class GameGenerator {
     // 初始化物理系统
     this.phyManager.init(this.app.screen.width, this.app.screen.height);
   }
-  restart(){
-    this.unmount()
+  debugPhysics() {
+    this.debugOptions.showPhysics = !this.debugOptions.showPhysics;
+    this.phyManager.setDebugMode(this.debugOptions.showPhysics);
+  }
+  restart() {
+    this.unmount();
     this.goManager = new Array<GameObject>();
     this.app = new Application();
     this._init();
@@ -102,8 +107,7 @@ class GameGenerator {
       this.debugOptions.showPhysics
     );
   }
-  _soft_destory() {
-  }
+  _soft_destory() {}
   /**
    * 解
    */
@@ -111,8 +115,8 @@ class GameGenerator {
     // this.app.
     // this.phyManager
   }
-  stop(){
-    this.app.ticker.stop()
+  stop() {
+    this.app.ticker.stop();
   }
   getDebugGameObjects() {
     return this.goManager;
@@ -143,6 +147,10 @@ class GameGenerator {
     if (go.findComponent("sprite") !== undefined) {
       const sprite = go.findComponent("sprite") as SpriteComponent;
       this.app.stage.addChild(sprite.getSprite());
+    }
+    if (go.findComponent("spine") !== undefined) {
+      const spine = go.findComponent("spine") as SpineComponent;
+      this.app.stage.addChild(spine.getSpine());
     }
     if (go.findComponent("graphic") !== undefined) {
       const graphic = go.findComponent("graphic") as GraphicComponent;
@@ -180,10 +188,15 @@ class GameGenerator {
     }
     this.goManager.splice(this.goManager.indexOf(go), 1);
   }
-  getGameObjectByPrefab(prefab: string){
+  getGameObjectByPrefab(prefab: string) {
     return this.goManager.filter((go) => {
-      return go.prefab === prefab
-    })
+      return go.prefab === prefab;
+    });
+  }
+  getGameObjectByLabel(label: string) {
+    return this.goManager.filter((go) => {
+      return go.label === label;
+    });
   }
   getGameObjectById(uuid: string) {
     return this.goManager.find((go) => {
@@ -197,9 +210,9 @@ class GameGenerator {
     }
     return undefined;
   }
-  sendSignal(event: string, param: Record<string, string>){
-    if(typeof this.baseSignalSend === 'function'){
-      this.baseSignalSend(event, param)
+  sendSignal(event: string, param: Record<string, string>) {
+    if (typeof this.baseSignalSend === "function") {
+      this.baseSignalSend(event, param);
     }
   }
   mount() {
@@ -216,8 +229,8 @@ class GameGenerator {
       }
     }
   }
-  unmount(){
-    this.app.canvas.remove()
+  unmount() {
+    this.app.canvas.remove();
   }
   async load() {
     // Intialize the application.
@@ -240,19 +253,28 @@ class GameGenerator {
   async update() {
     // 游戏逻辑之后移除
     let lastDetecor = 0;
-    
-    this.app.ticker.add((time) => {
+
+    this.app.ticker.add(async (time) => {
       // onUpdateBeforePhysics();
 
       // 物理自动更新
+      // 第一次定位由物理同步，如需手动需设置 init 为 true
       const updatedPhyMap = this.phyManager.getUpdatedMap();
 
       for (let i = 0; i < this.goManager.length; i++) {
         const curGO = this.goManager[i];
+        const phybody = curGO.findComponent("physics2d");
+        if (
+          phybody &&
+          phybody instanceof Physics2DComponent &&
+          (phybody.isStatic || phybody.isSleeping)
+        ) {
+          continue;
+        }
         curGO.setGeo({
           pos: updatedPhyMap.get(curGO.id)?.pos || { x: 0, y: 0 },
-          rot: updatedPhyMap.get(curGO.id)?.angle || 0
-        })
+          rot: updatedPhyMap.get(curGO.id)?.angle || 0,
+        });
       }
       updatedPhyMap.clear();
 
@@ -267,7 +289,7 @@ class GameGenerator {
         lastDetecor = detectPeriod;
       }
 
-      onUpdate(this, time);
+      await onUpdate(this, time);
 
       // 如果 goManager 对象改变
       this.debugSignal(time.lastTime);
