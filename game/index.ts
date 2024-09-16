@@ -67,7 +67,7 @@ class GameGenerator {
   baseSignalSend = new Function();
 
   debugOptions = {
-    showPhysics: true,
+    showPhysics: false,
     updateGOPanel: true,
   };
 
