@@ -3,6 +3,7 @@ import { Spine } from "@pixi/spine-pixi";
 import GameObject from "./GameObject";
 import GameGenerator from "../game";
 import Matter from "matter-js";
+import { AudioManager } from "../audio";
 
 /**
  * GameObject 组件基类
@@ -170,6 +171,7 @@ export class SpineAnimatorComponent extends Component {
     run: false,
     hover: false,
     jump: false,
+    spawn: false,
   };
   constructor(spine: Spine) {
     super("spineAnimator");
@@ -260,6 +262,24 @@ export class SpineAnimatorComponent extends Component {
       };
       this.spine.state.addListener(listener);
     });
+  }
+}
+
+export class AudioComponent extends Component {
+  audio;
+  sources;
+  constructor(sources: { [key: string]: { src: string; rate: number } }) {
+    super("audio");
+    this.audio = new AudioManager(sources);
+    this.sources = sources;
+  }
+
+  play(event: string) {
+    this.audio.play(event);
+  }
+
+  pause(event: string) {
+    this.audio.pause(event);
   }
 }
 
