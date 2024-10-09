@@ -289,9 +289,10 @@ class GameGenerator {
         lastDetecor = detectPeriod;
       }
 
+      // Gameplay 逻辑
       await onUpdate(this, time);
 
-      // 如果 goManager 对象改变
+      // Debug 信号
       this.debugSignal(time.lastTime);
     });
   }
